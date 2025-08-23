@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tela do Colaborador - PontoApp</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+        }
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            max-width: 450px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        .app-bar {
+            background-color: #00796b;
+            color: white;
+            padding: 15px 20px;
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            position: relative;
+            z-index: 1001;
+        }
+        .menu-btn, .back-btn {
+            position: absolute;
+            left: 15px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+        }
+        .app-bar-title {
+            flex-grow: 1;
+            text-align: center;
+        }
+        .view {
+            flex-grow: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-y: auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .hidden {
+            display: none;
+        }
+        
+        /* Logo e Nome da Empresa */
+        .logo-container { text-align: center; margin-bottom: 20px; }
+        .logo-svg { width: 150px; height: auto; margin-bottom: 10px; }
+        .company-name { font-family: 'Arial Black', Gadget, sans-serif; font-weight: bold; }
+        .name-part1 { color: #f37021; font-size: 1.2rem; display: block; margin-bottom: 5px; }
+        .name-part2 { background-color: #296e3a; color: white; padding: 8px 20px; border-radius: 8px; font-size: 1.5rem; display: inline-block; }
+
+        /* Relógio e Botão */
+        .clock-display { text-align: center; margin-bottom: 20px; }
+        #hora-atual { font-size: 4rem; font-weight: 700; color: #004d40; line-height: 1; }
+        #data-atual { font-size: 1.1rem; color: #757575; }
+        .action-button { width: 100%; padding: 15px; font-size: 1.2rem; font-weight: bold; color: white; background-color: #00796b; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px; }
+        
+        /* Menu Lateral */
+        .nav-drawer { position: absolute; top: 0; left: -300px; width: 280px; height: 100%; background-color: #ffffff; box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 1000; transition: left 0.3s ease-in-out; display: flex; flex-direction: column; }
+        .nav-drawer.open { left: 0; }
+        .drawer-header { padding: 20px; background-color: #004d40; color: white; }
+        .drawer-header h2 { margin: 0; font-size: 1.2rem; }
+        .drawer-header p { margin: 5px 0 0; font-size: 0.9rem; opacity: 0.8; }
+        .drawer-menu { list-style: none; padding: 10px 0; margin: 0; flex-grow: 1; }
+        .drawer-menu li a { display: flex; align-items: center; padding: 15px 20px; text-decoration: none; color: #333; font-size: 1rem; cursor: pointer; }
+        .drawer-menu li a:hover { background-color: #f0f0f0; }
+        .drawer-menu li a svg { margin-right: 15px; }
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 999; opacity: 0; visibility: hidden; transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out; }
+        .overlay.show { opacity: 1; visibility: visible; }
+
+        /* Banco de Horas */
+        .hour-balance-section { padding: 15px 20px; border-bottom: 1px solid #eee; }
+        .hour-balance-section h3 { margin: 0 0 10px 0; font-size: 0.9rem; color: #757575; text-transform: uppercase; }
+        .balance-item { display: flex; justify-content: space-between; align-items: center; font-size: 1rem; padding: 5px 0; }
+        .balance-item span:last-child { font-weight: bold; }
+        .positive-balance { color: #2e7d32; }
+        .negative-balance { color: #c62828; }
+
+        /* Rodapé do Menu */
+        .drawer-footer { padding: 20px; font-size: 0.8rem; color: #888; text-align: center; border-top: 1px solid #eee; }
+        .drawer-footer p { margin: 2px 0; }
+
+        /* Telas Secundárias */
+        .form-group { width: 100%; margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
+        .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-family: inherit; font-size: 1rem; }
+        .profile-pic { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid #00796b; }
+        .profile-info { text-align: center; margin-bottom: 40px; width: 100%; }
+        .profile-info h2 { margin: 10px 0 5px; font-size: 1.5rem; }
+        .profile-info p { margin: 0; color: #757575; }
+        .profile-actions { width: 100%; display: flex; flex-direction: column; gap: 15px; }
+        .profile-actions button { padding: 15px; font-size: 1rem; border-radius: 8px; border: 1px solid #ccc; background-color: #f5f5f5; cursor: pointer; }
+        
+        /* Calendário e Tarefas */
+        .calendar-section { width: 100%; background-color: #f9f9f9; border: 1px solid #eee; border-radius: 8px; padding: 15px; box-sizing: border-box; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .calendar-header button { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #00796b; }
+        .calendar-header h3 { margin: 0; font-size: 1.2rem; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
+        .calendar-grid div { padding: 8px 0; border-radius: 50%; position: relative; }
+        .day-name { font-weight: bold; color: #757575; font-size: 0.8rem; }
+        .day-number { cursor: pointer; }
+        .worked-day { background-color: #a7d8a9; color: #145a32; font-weight: bold; }
+        .task-day::after { content: ''; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 6px; height: 6px; background-color: #f37021; border-radius: 50%; }
+        .selected-day { background-color: #b2dfdb !important; }
+        .tasks-section { width: 100%; margin-top: 20px; display: none; }
+        .tasks-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .tasks-header h3 { font-size: 1.1rem; color: #333; margin: 0; }
+        .add-task-btn { background-color: #00796b; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; font-size: 1.5rem; cursor: pointer; line-height: 30px; }
+        .tasks-list li { background-color: #fff8e1; border-left: 4px solid #fbc02d; padding: 10px; margin-bottom: 8px; border-radius: 4px; }
+        
+        /* Marcações de Ponto */
+        .registros-section { width: 100%; margin-top: 20px; }
+        .registros-list li.entrada { background-color: #e8f5e9; border-left: 4px solid #4caf50; }
+        .registros-list li.saida { background-color: #ffebee; border-left: 4px solid #f44336; }
+
+        /* Snackbar/Notificação */
+        .snackbar { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 2002; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 1rem; }
+        .snackbar.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="overlay" id="overlay"></div>
+        <nav class="nav-drawer" id="nav-drawer">
+            <div class="drawer-header">
+                <h2>E3S Ponto</h2>
+                <p id="drawer-user-name">Marcia Sousa</p>
+            </div>
+            <div class="hour-balance-section">
+                <h3>Banco de Horas</h3>
+                <div class="balance-item"><span>Saldo Positivo:</span><span class="positive-balance">+22:30</span></div>
+                <div class="balance-item"><span>Saldo Negativo:</span><span class="negative-balance">-03:15</span></div>
+            </div>
+            <ul class="drawer-menu">
+                <li><a data-target="profile-view"><svg height="24px" viewBox="0 0 24 24" width="24px" fill="#5f6368"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 5.9c1.16 0 2.1.94 2.1 2.1s-.94 2.1-2.1 2.1S9.9 9.16 9.9 8s.94-2.1 2.1-2.1m0 9c2.97 0 6.1 1.46 6.1 2.1v1.1H5.9V17c0-.64 3.13-2.1 6.1-2.1M12 4C9.79 4 8 5.79 8 8s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0 9c-2.67 0-8 1.34-8 4v3h16v-3c0-2.66-5.33-4-8-4z"/></svg>Meu Perfil</a></li>
+                <li><a data-target="adjustment-view"><svg height="24px" viewBox="0 0 24 24" width="24px" fill="#5f6368"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M19 8l-4 4h3v6h2v-6h3l-4-4zM9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>Solicitar Ajuste</a></li>
+                <li><a><svg height="24px" viewBox="0 0 24 24" width="24px" fill="#5f6368"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>Sair</a></li>
+            </ul>
+            <div class="drawer-footer">
+                <p>PontoApp E3S v1.0.0</p>
+                <p>Criador: Alex Bueno</p>
+            </div>
+        </nav>
+
+        <div id="main-view">
+            <header class="app-bar">
+                <button class="menu-btn" id="menu-btn"><svg height="24px" viewBox="0 0 24 24" width="24px" fill="#FFFFFF"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></button>
+                <span class="app-bar-title" id="app-bar-title">Registo de Ponto</span>
+            </header>
+            
+            <main class="view active" id="main-content-view">
+                <div class="logo-container">
+                    <svg class="logo-svg" viewBox="0 0 220 80" xmlns="http://www.w3.org/2000/svg"><style>.logo-text{font-family:'Arial Black',Gadget,sans-serif;font-size:70px;text-anchor:middle;}.green-text{fill:#296e3a;}.orange-text{fill:#f37021;}</style><text x="75" y="60" class="logo-text green-text">E</text><text x="145" y="60" class="logo-text green-text">S</text><text x="110" y="60" class="logo-text orange-text">3</text></svg>
+                    <div class="company-name"><span class="name-part1">ENGENHARIA</span><span class="name-part2">SARAIVA</span></div>
+                </div>
+                <div class="clock-display"><div id="hora-atual">00:00:00</div><div id="data-atual">01/01/2025</div></div>
+                <button class="action-button" id="bater-ponto-btn"><svg xmlns="http://www.w3.org/2000/svg" height="32px" viewBox="0 0 24 24" width="32px" fill="#FFFFFF"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.88 13.48L12 11.15l-1.88 4.33-4.57-.95.93-4.48-3.44-3.07 4.59-.38L12 2.5l1.88 4.33 4.59.38-3.44 3.07.93 4.48-4.57.95z"/></svg>BATER O PONTO</button>
+                <section class="registros-section" id="registros-section"><div class="registros-header"><h3 id="registros-title">As Suas Marcações de Hoje:</h3></div><ul class="registros-list" id="registros-list"></ul></section>
+                <section class="calendar-section"><div class="calendar-header"><button id="prev-month-btn">&lt;</button><h3 id="month-year-title">Agosto 2025</h3><button id="next-month-btn">&gt;</button></div><div class="calendar-grid"><div class="day-name">D</div><div class="day-name">S</div><div class="day-name">T</div><div class="day-name">Q</div><div class="day-name">Q</div><div class="day-name">S</div><div class="day-name">S</div></div><div class="calendar-grid" id="calendar-body"></div></section>
+                <section class="tasks-section" id="tasks-section"><div class="tasks-header"><h3 id="tasks-title"></h3><button id="add-task-btn" class="add-task-btn">+</button></div><ul class="tasks-list" id="tasks-list"></ul></section>
+            </main>
+            
+            <main class="view hidden" id="profile-view">
+                <div class="profile-info">
+                    <img src="https://i.pravatar.cc/150?u=marcia" alt="Foto de Perfil" class="profile-pic" id="profile-pic-img">
+                    <div id="profile-name-view">
+                        <h2 id="profile-name-display">Marcia Sousa</h2>
+                        <p>Nome de Utilizador: marcia</p>
+                    </div>
+                    <div id="profile-name-edit" class="hidden form-group">
+                        <label for="profile-name-input">Alterar Nome Completo:</label>
+                        <input type="text" id="profile-name-input">
+                    </div>
+                </div>
+                <div class="profile-actions">
+                    <button id="edit-name-btn">Editar Nome</button>
+                    <button id="save-name-btn" class="hidden">Guardar</button>
+                    <button id="change-photo-btn">Alterar Foto</button>
+                    <input type="file" id="photo-upload" accept="image/*" style="display: none;">
+                    <button>Alterar Senha</button>
+                </div>
+            </main>
+
+            <main class="view hidden" id="adjustment-view">
+                <div class="form-group"><label for="adjustment-date">Data do Ajuste</label><input type="date" id="adjustment-date" value="2025-08-19"></div>
+                <div class="form-group"><label>Horários Registados</label><div><input type="time" value="08:01"><input type="time" value="12:05"></div></div>
+                <div class="form-group"><label for="adjustment-reason">Motivo</label><textarea id="adjustment-reason"></textarea></div>
+                <button class="action-button">Enviar</button>
+            </main>
+        </div>
+        <div id="snackbar" class="snackbar"></div>
+    </div>
+
+    <script>
+        const menuBtn = document.getElementById('menu-btn');
+        const navDrawer = document.getElementById('nav-drawer');
+        const overlay = document.getElementById('overlay');
+        const appBarTitle = document.getElementById('app-bar-title');
+        const allViews = document.querySelectorAll('.view');
+        const snackbar = document.getElementById('snackbar');
+        
+        const changePhotoBtn = document.getElementById('change-photo-btn');
+        const photoUploadInput = document.getElementById('photo-upload');
+        const profilePicImg = document.getElementById('profile-pic-img');
+
+        const editNameBtn = document.getElementById('edit-name-btn');
+        const saveNameBtn = document.getElementById('save-name-btn');
+        const profileNameView = document.getElementById('profile-name-view');
+        const profileNameEdit = document.getElementById('profile-name-edit');
+        const profileNameDisplay = document.getElementById('profile-name-display');
+        const profileNameInput = document.getElementById('profile-name-input');
+        const drawerUserName = document.getElementById('drawer-user-name');
+
+        function showSnackbar(message) {
+            snackbar.textContent = message;
+            snackbar.className = "snackbar show";
+            setTimeout(() => { snackbar.className = snackbar.className.replace("show", ""); }, 3000);
+        }
+
+        editNameBtn.addEventListener('click', () => {
+            profileNameView.classList.add('hidden');
+            profileNameEdit.classList.remove('hidden');
+            editNameBtn.classList.add('hidden');
+            saveNameBtn.classList.remove('hidden');
+            profileNameInput.value = profileNameDisplay.textContent;
+        });
+
+        saveNameBtn.addEventListener('click', () => {
+            const newName = profileNameInput.value;
+            profileNameDisplay.textContent = newName;
+            drawerUserName.textContent = newName;
+            
+            profileNameView.classList.remove('hidden');
+            profileNameEdit.classList.add('hidden');
+            editNameBtn.classList.remove('hidden');
+            saveNameBtn.classList.add('hidden');
+            showSnackbar("Nome alterado com sucesso!");
+        });
+
+        changePhotoBtn.addEventListener('click', () => {
+            photoUploadInput.click();
+        });
+
+        photoUploadInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    profilePicImg.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function toggleMenu() {
+            navDrawer.classList.toggle('open');
+            overlay.classList.toggle('show');
+        }
+
+        function showView(targetId, title) {
+            allViews.forEach(view => {
+                view.classList.add('hidden');
+            });
+            document.getElementById(targetId).classList.remove('hidden');
+            appBarTitle.textContent = title;
+            
+            const existingBackBtn = document.querySelector('.back-btn');
+            if (existingBackBtn) existingBackBtn.remove();
+            
+            if (targetId !== 'main-content-view') {
+                const backBtn = document.createElement('button');
+                backBtn.className = 'back-btn';
+                backBtn.innerHTML = '<svg height="24px" viewBox="0 0 24 24" width="24px" fill="#FFFFFF"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>';
+                backBtn.onclick = () => showView('main-content-view', 'Registo de Ponto');
+                document.querySelector('.app-bar').prepend(backBtn);
+                menuBtn.style.display = 'none';
+            } else {
+                menuBtn.style.display = 'block';
+            }
+        }
+
+        menuBtn.addEventListener('click', toggleMenu);
+        overlay.addEventListener('click', toggleMenu);
+        
+        document.querySelectorAll('.drawer-menu a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                const targetId = e.currentTarget.getAttribute('data-target');
+                if (targetId) {
+                    let title = '';
+                    if (targetId === 'profile-view') title = 'Meu Perfil';
+                    if (targetId === 'adjustment-view') title = 'Solicitar Ajuste';
+                    toggleMenu();
+                    showView(targetId, title);
+                }
+            });
+        });
+        
+        (function() {
+            const horaEl = document.getElementById('hora-atual');
+            const dataEl = document.getElementById('data-atual');
+            const baterPontoBtn = document.getElementById('bater-ponto-btn');
+            const registrosList = document.getElementById('registros-list');
+            const monthYearTitle = document.getElementById('month-year-title');
+            const calendarBody = document.getElementById('calendar-body');
+            const prevMonthBtn = document.getElementById('prev-month-btn');
+            const nextMonthBtn = document.getElementById('next-month-btn');
+            const tasksSection = document.getElementById('tasks-section');
+            const tasksTitle = document.getElementById('tasks-title');
+            const tasksList = document.getElementById('tasks-list');
+            const addTaskBtn = document.getElementById('add-task-btn');
+            
+            const workedDaysData = ['2025-08-19']; 
+            const tasksData = {
+                '2025-08-20': ['Reunião de equipa às 10:00', 'Entregar relatório EHS'],
+                '2025-08-22': ['Formação de segurança às 14:00']
+            };
+            let currentDate = new Date(2025, 7, 20);
+            let selectedDayElement = null;
+            let selectedDateString = '';
+            const registrosDoDia = [];
+
+            function atualizarRelogio() {
+                const agora = new Date();
+                horaEl.textContent = agora.toLocaleTimeString('pt-BR');
+                dataEl.textContent = agora.toLocaleDateString('pt-BR');
+            }
+
+            function generateCalendar(date) {
+                calendarBody.innerHTML = '';
+                const year = date.getFullYear();
+                const month = date.getMonth();
+                const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+                monthYearTitle.textContent = `${monthNames[month]} ${year}`;
+                const firstDayOfMonth = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                
+                for (let i = 0; i < firstDayOfMonth; i++) { calendarBody.insertAdjacentHTML('beforeend', '<div></div>'); }
+
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayDiv = document.createElement('div');
+                    dayDiv.textContent = day;
+                    dayDiv.classList.add('day-number');
+                    const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+                    if (workedDaysData.includes(dateString)) { dayDiv.classList.add('worked-day'); }
+                    if (tasksData[dateString] && tasksData[dateString].length > 0) { dayDiv.classList.add('task-day'); }
+                    
+                    const today = new Date();
+                    if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) { dayDiv.classList.add('today'); }
+                    
+                    dayDiv.addEventListener('click', () => showTasksForDay(day, month, year, dayDiv));
+                    calendarBody.appendChild(dayDiv);
+                }
+            }
+
+            function showTasksForDay(day, month, year, dayElement) {
+                if (selectedDayElement) {
+                    selectedDayElement.classList.remove('selected-day');
+                }
+                dayElement.classList.add('selected-day');
+                selectedDayElement = dayElement;
+                selectedDateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+                tasksTitle.textContent = `Tarefas para ${day}/${String(month + 1).padStart(2, '0')}`;
+                tasksList.innerHTML = '';
+                
+                const tasks = tasksData[selectedDateString];
+                if (tasks && tasks.length > 0) {
+                    tasks.forEach(taskText => {
+                        const li = document.createElement('li');
+                        li.textContent = taskText;
+                        tasksList.appendChild(li);
+                    });
+                } else {
+                    const li = document.createElement('li');
+                    li.textContent = 'Nenhuma tarefa para este dia.';
+                    tasksList.appendChild(li);
+                }
+                tasksSection.style.display = 'block';
+            }
+
+            addTaskBtn.addEventListener('click', () => {
+                if (!selectedDateString) return;
+                const taskText = prompt('Digite a nova tarefa:');
+                if (taskText && taskText.trim() !== '') {
+                    if (!tasksData[selectedDateString]) {
+                        tasksData[selectedDateString] = [];
+                    }
+                    tasksData[selectedDateString].push(taskText.trim());
+                    generateCalendar(currentDate);
+                    const day = parseInt(selectedDateString.split('-')[2]);
+                    const dayElement = Array.from(calendarBody.children).find(d => d.textContent == day);
+                    if(dayElement) showTasksForDay(day, currentDate.getMonth(), currentDate.getFullYear(), dayElement);
+                }
+            });
+
+            baterPontoBtn.addEventListener('click', () => {
+                const agora = new Date();
+                const horas = String(agora.getHours()).padStart(2, '0');
+                const minutos = String(agora.getMinutes()).padStart(2, '0');
+                const tipo = registrosDoDia.length % 2 === 0 ? 'Entrada' : 'Saída';
+                const novoRegistro = `${tipo} - ${horas}:${minutos}`;
+                registrosDoDia.push(novoRegistro);
+                const li = document.createElement('li');
+                li.textContent = novoRegistro;
+                li.classList.add(tipo.toLowerCase());
+                registrosList.appendChild(li);
+                showSnackbar(`Ponto de ${tipo} registado com sucesso!`);
+            });
+
+            prevMonthBtn.addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() - 1);
+                generateCalendar(currentDate);
+                tasksSection.style.display = 'none';
+            });
+
+            nextMonthBtn.addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() + 1);
+                generateCalendar(currentDate);
+                tasksSection.style.display = 'none';
+            });
+
+            setInterval(atualizarRelogio, 1000);
+            atualizarRelogio();
+            generateCalendar(currentDate);
+        })();
+    </script>
+</body>
+</html>
